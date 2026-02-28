@@ -4,15 +4,17 @@ from database import engine, Base, SessionLocal
 from routes import drinks, users, admin
 from seed_data import seed_database
 
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Seed database
-db = SessionLocal()
-seed_database(db)
-db.close()
-
 app = FastAPI(title="Coffee Shop API", version="1.0.0")
+
+# Create tables and seed database on startup
+@app.on_event("startup")
+def startup_event():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
 
 # CORS middleware - allow client to connect
 app.add_middleware(
