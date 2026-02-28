@@ -1,7 +1,10 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./coffee_shop.db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "sqlite:///./data/coffee_shop.db"
+)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
