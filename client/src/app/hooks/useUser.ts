@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  getUser,
   getUserProfile,
   createOrder as apiCreateOrder,
   OrderItemCreate,
   User,
   OrderHistory,
 } from "../api/api";
-
-const DEFAULT_USER_ID = "user-1";
-
-// Mock user for fallback
-const MOCK_USER: User = {
-  id: DEFAULT_USER_ID,
-  name: "Пользователь",
-  points: 0,
-};
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -28,16 +18,21 @@ export function useUser() {
   // Load user profile from API on mount
   useEffect(() => {
     const loadUserProfile = async () => {
+      const userId = localStorage.getItem("user_id");
+      
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const profile = await getUserProfile(DEFAULT_USER_ID);
+        const profile = await getUserProfile(userId);
         setUser(profile.user);
         setOrderHistory(profile.orderHistory);
         setTotalSpent(profile.totalSpent);
         setTotalPointsEarned(profile.totalPointsEarned);
       } catch (err) {
         console.error("Failed to load user profile:", err);
-        // Use mock user as fallback
-        setUser(MOCK_USER);
         setError(err instanceof Error ? err.message : "Failed to load user");
       } finally {
         setIsLoading(false);
@@ -48,10 +43,11 @@ export function useUser() {
   }, []);
 
   const addOrder = async (items: OrderItemCreate[]) => {
-    if (!user) throw new Error("User not loaded");
+    const userId = localStorage.getItem("user_id");
+    if (!userId) throw new Error("User not logged in");
 
     try {
-      const order = await apiCreateOrder(user.id, items);
+      const order = await apiCreateOrder(userId, items);
 
       // Update order history
       const newOrder: OrderHistory = {
@@ -78,8 +74,11 @@ export function useUser() {
   };
 
   const refreshProfile = async () => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+
     try {
-      const profile = await getUserProfile(DEFAULT_USER_ID);
+      const profile = await getUserProfile(userId);
       setUser(profile.user);
       setOrderHistory(profile.orderHistory);
       setTotalSpent(profile.totalSpent);

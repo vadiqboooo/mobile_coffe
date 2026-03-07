@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { ShoppingCart, User } from "lucide-react";
+import { ShoppingCart, User, LogIn } from "lucide-react";
 import { useCart } from "../hooks/useCart";
 import { useUser } from "../hooks/useUser";
 import { getDrinks, Drink } from "../api/api";
@@ -45,24 +45,36 @@ export default function Menu() {
             <h1 className="text-2xl font-bold text-amber-900">☕ Coffee Shop</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 bg-amber-100 px-3 py-2 rounded-full hover:bg-amber-200 transition-colors"
-            >
-              <User className="w-5 h-5 text-amber-900" />
-              <span className="font-bold text-amber-900">{user?.points ?? 0}</span>
-            </button>
-            <button
-              onClick={() => navigate("/cart")}
-              className="relative p-3 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
-            >
-              <ShoppingCart className="w-6 h-6 text-amber-900" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+            {user ? (
+              <>
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex items-center gap-2 bg-amber-100 px-3 py-2 rounded-full hover:bg-amber-200 transition-colors"
+                >
+                  <User className="w-5 h-5 text-amber-900" />
+                  <span className="font-bold text-amber-900">{user.points ?? 0}</span>
+                </button>
+                <button
+                  onClick={() => navigate("/cart")}
+                  className="relative p-3 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
+                >
+                  <ShoppingCart className="w-6 h-6 text-amber-900" />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full hover:bg-amber-200 transition-colors"
+              >
+                <LogIn className="w-5 h-5 text-amber-900" />
+                <span className="font-bold text-amber-900">Войти</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

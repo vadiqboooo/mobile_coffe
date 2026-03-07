@@ -3,6 +3,7 @@ import Menu from "./pages/Menu";
 import CustomizeDrink from "./pages/CustomizeDrink";
 import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
+import UserLogin from "./pages/UserLogin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
   {
     path: "/profile",
     Component: Profile,
+  },
+  {
+    path: "/login",
+    Component: UserLogin,
   },
   {
     path: "/admin",

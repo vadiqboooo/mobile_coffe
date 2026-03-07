@@ -85,6 +85,17 @@ export interface AdminLogin {
   password: string;
 }
 
+export interface UserLogin {
+  name: string;
+  avatar?: string;
+}
+
+export interface UserLoginResponse {
+  access_token: string;
+  token_type: string;
+  user_id: string;
+}
+
 export interface DrinkUpdate {
   name?: string;
   description?: string;
@@ -129,6 +140,22 @@ export async function getSyrupOptions(): Promise<Option[]> {
 }
 
 // Users API
+export async function loginUser(data: { name: string; avatar?: string }): Promise<UserLoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/users/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<UserLoginResponse>(response);
+}
+
+export async function getCurrentUser(token: string): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/users/me`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  return handleResponse<User>(response);
+}
+
 export async function getUser(id: string): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/users/${id}`);
   return handleResponse<User>(response);
@@ -169,7 +196,7 @@ export async function createOrder(
 }
 
 // Admin API
-export async function loginUser(username: string, password: string): Promise<{ access_token: string }> {
+export async function loginAdmin(username: string, password: string): Promise<{ access_token: string }> {
   const response = await fetch(`${API_BASE_URL}/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

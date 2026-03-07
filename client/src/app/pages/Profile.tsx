@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { useUser } from "../hooks/useUser";
-import { ArrowLeft, Award, Clock, TrendingUp, QrCode, X, Settings } from "lucide-react";
+import { ArrowLeft, Award, Clock, TrendingUp, QrCode, X, Settings, LogOut } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useState } from "react";
 
@@ -8,6 +8,37 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, orderHistory, isLoading } = useUser();
   const [showQR, setShowQR] = useState(false);
+
+  // Redirect to login if not authenticated
+  if (!isLoading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Award className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-amber-900 mb-2">Войдите в аккаунт</h2>
+          <p className="text-amber-600 mb-4">
+            Войдите, чтобы просматривать свой профиль и историю заказов
+          </p>
+          <div className="space-y-2">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full bg-amber-600 text-white py-3 rounded-xl font-medium hover:bg-amber-700 transition-colors"
+            >
+              Войти
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-amber-100 text-amber-900 py-3 rounded-xl font-medium hover:bg-amber-200 transition-colors"
+            >
+              В меню
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !user) {
     return (
@@ -19,6 +50,15 @@ export default function Profile() {
 
   const totalSpent = orderHistory.reduce((sum, order) => sum + order.total, 0);
   const totalPointsEarned = orderHistory.reduce((sum, order) => sum + order.pointsEarned, 0);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user_token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_avatar");
+    navigate("/");
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white pb-20">
@@ -34,13 +74,22 @@ export default function Profile() {
             </button>
             <h1 className="text-xl font-bold text-amber-900">Профиль</h1>
           </div>
-          <button
-            onClick={() => navigate("/admin")}
-            className="p-2 hover:bg-amber-100 rounded-full transition-colors"
-            title="Admin Panel"
-          >
-            <Settings className="w-6 h-6 text-amber-900" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-amber-100 rounded-full transition-colors"
+              title="Выйти"
+            >
+              <LogOut className="w-6 h-6 text-amber-900" />
+            </button>
+            <button
+              onClick={() => navigate("/admin")}
+              className="p-2 hover:bg-amber-100 rounded-full transition-colors"
+              title="Admin Panel"
+            >
+              <Settings className="w-6 h-6 text-amber-900" />
+            </button>
+          </div>
         </div>
       </header>
 

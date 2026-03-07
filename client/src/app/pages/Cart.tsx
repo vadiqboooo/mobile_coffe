@@ -17,6 +17,37 @@ export default function Cart() {
     );
   }
 
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-amber-900 mb-2">Войдите для оформления</h2>
+          <p className="text-amber-600 mb-4">
+            Войдите, чтобы оформить заказ и получить баллы
+          </p>
+          <div className="space-y-2">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full bg-amber-600 text-white py-3 rounded-xl font-medium hover:bg-amber-700 transition-colors"
+            >
+              Войти
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-amber-100 text-amber-900 py-3 rounded-xl font-medium hover:bg-amber-200 transition-colors"
+            >
+              В меню
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const totalPrice = cart.reduce(
     (sum, item) => sum + (item.drink.price + calculateExtras(item)) * item.quantity,
     0

@@ -1,17 +1,95 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from datetime import datetime, timedelta
+import jwt
+import hashlib
 
 import models
 import schemas
-from database import get_db
+from database import get_db, SessionLocal
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+# User auth
+USER_SECRET_KEY = "coffee-shop-user-secret-key-change-in-production"
+USER_ALGORITHM = "HS256"
+
+security = HTTPBearer(auto_error=False)
+
+
+def create_user_access_token(user_id: str) -> str:
+    expire = datetime.utcnow() + timedelta(days=30)
+    to_encode = {"sub": user_id, "exp": expire}
+    return jwt.encode(to_encode, USER_SECRET_KEY, algorithm=USER_ALGORITHM)
+
+
+def get_current_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[str]:
+    if credentials is None:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, USER_SECRET_KEY, algorithms=[USER_ALGORITHM])
+        user_id: str = payload.get("sub")
+        return user_id
+    except jwt.PyJWTError:
+        return None
 
 
 def calculate_points(total: float) -> int:
     """Calculate loyalty points: 10% of order total"""
     return int(total * 0.1)
+
+
+@router.post("/login", response_model=dict)
+def user_login(credentials: schemas.UserBase):
+    """
+    Login or register a user.
+    If user exists by name, return existing user.
+    If not, create new user.
+    """
+    db = SessionLocal()
+    try:
+        # Try to find existing user by name
+        user = db.query(models.User).filter(
+            models.User.name == credentials.name
+        ).first()
+
+        if user:
+            # Existing user - return token
+            access_token = create_user_access_token(user.id)
+            return {"access_token": access_token, "token_type": "bearer", "user_id": user.id}
+        else:
+            # New user - create and return token
+            new_user = models.User(
+                name=credentials.name,
+                points=0,
+                avatar=credentials.avatar
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            access_token = create_user_access_token(new_user.id)
+            return {"access_token": access_token, "token_type": "bearer", "user_id": new_user.id}
+    finally:
+        db.close()
+
+
+@router.get("/me", response_model=schemas.UserResponse)
+def get_current_user_profile(
+    db: Session = Depends(get_db),
+    user_id: Optional[str] = Depends(get_current_user_id)
+):
+    """Get current authenticated user"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
 @router.get("/{user_id}", response_model=schemas.UserResponse)
